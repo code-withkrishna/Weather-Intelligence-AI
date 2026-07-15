@@ -6,9 +6,17 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.database import Base, get_db
+from app.services.external_api import get_weather_client
 from app.main import app
 from app.repositories.weather_repository import WeatherRepository
 from app.services.weather_service import WeatherService
+
+
+class OfflineWeatherClient:
+    is_configured = False
+
+    async def air_quality(self, lat: float, lon: float) -> None:
+        return None
 
 
 @pytest.fixture()
@@ -46,6 +54,7 @@ def client(db_session):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_weather_client] = lambda: OfflineWeatherClient()
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()

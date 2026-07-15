@@ -62,10 +62,10 @@ def get_weather_record(record_id: int, service: WeatherService = Depends(_servic
 
 
 @router.put("/{record_id}", response_model=WeatherRecordRead)
-def update_weather_record(
+async def update_weather_record(
     record_id: int, payload: WeatherRecordUpdate, service: WeatherService = Depends(_service)
 ):
-    return service.update_record(record_id, payload)
+    return await service.update_record(record_id, payload)
 
 
 @router.delete("/{record_id}", status_code=204)

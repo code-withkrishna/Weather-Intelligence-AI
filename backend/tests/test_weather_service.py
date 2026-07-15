@@ -7,8 +7,15 @@ from datetime import date, timedelta
 import pytest
 from pydantic import ValidationError as PydanticValidationError
 
-from app.core.exceptions import DuplicateRecordError, NotFoundError, ValidationError
+from app.core.exceptions import (
+    DuplicateRecordError,
+    LocationNotFoundError,
+    NotFoundError,
+    ValidationError,
+)
+from app.repositories.weather_repository import WeatherRepository
 from app.schemas.weather import WeatherRecordCreate, WeatherRecordUpdate
+from app.services.weather_service import WeatherService
 
 TODAY = date(2026, 7, 14)
 
@@ -26,6 +33,25 @@ def make_payload(**overrides) -> WeatherRecordCreate:
     )
     defaults.update(overrides)
     return WeatherRecordCreate(**defaults)
+
+
+class ConfiguredFakeWeatherClient:
+    is_configured = True
+
+    async def geocode(self, query: str) -> dict:
+        if query == "NotARealPlace":
+            raise LocationNotFoundError("Location 'NotARealPlace' could not be found.")
+        return {
+            "name": "Vijayawada",
+            "latitude": 16.5062,
+            "longitude": 80.6480,
+            "country": "IN",
+        }
+
+    async def current_weather(
+        self, latitude: float, longitude: float, units: str = "metric"
+    ) -> dict:
+        return {"temperature": 32.0}
 
 
 class TestCreateRecord:
@@ -49,6 +75,24 @@ class TestCreateRecord:
             make_payload(start_date=TODAY + timedelta(days=10), end_date=TODAY + timedelta(days=11))
         )
         assert record.id is not None
+
+    @pytest.mark.asyncio
+    async def test_rejects_unknown_location_when_provider_is_configured(self, db_session):
+        service = WeatherService(
+            WeatherRepository(db_session), weather_client=ConfiguredFakeWeatherClient()
+        )
+        with pytest.raises(LocationNotFoundError):
+            await service.create_record(make_payload(location_name="NotARealPlace"))
+
+    @pytest.mark.asyncio
+    async def test_rejects_location_coordinate_mismatch_when_provider_is_configured(
+        self, db_session
+    ):
+        service = WeatherService(
+            WeatherRepository(db_session), weather_client=ConfiguredFakeWeatherClient()
+        )
+        with pytest.raises(ValidationError):
+            await service.create_record(make_payload(latitude=0, longitude=0))
 
     def test_rejects_end_before_start_at_schema_level(self):
         with pytest.raises(ValueError):
@@ -109,7 +153,7 @@ class TestUpdateRecord:
     @pytest.mark.asyncio
     async def test_update_changes_supplied_fields_only(self, weather_service):
         created = await weather_service.create_record(make_payload())
-        updated = weather_service.update_record(
+        updated = await weather_service.update_record(
             created.id, WeatherRecordUpdate(temperature=40.0)
         )
         assert updated.temperature == 40.0
@@ -135,7 +179,7 @@ class TestUpdateRecord:
             make_payload(start_date=TODAY, end_date=TODAY + timedelta(days=5))
         )
         with pytest.raises(ValidationError):
-            weather_service.update_record(
+            await weather_service.update_record(
                 created.id, WeatherRecordUpdate(start_date=TODAY + timedelta(days=10))
             )
 
@@ -146,14 +190,26 @@ class TestUpdateRecord:
             make_payload(start_date=TODAY + timedelta(days=30), end_date=TODAY + timedelta(days=31))
         )
         with pytest.raises(DuplicateRecordError):
-            weather_service.update_record(
+            await weather_service.update_record(
                 second.id,
                 WeatherRecordUpdate(start_date=first.start_date, end_date=first.end_date),
             )
 
-    def test_update_raises_not_found(self, weather_service):
+    @pytest.mark.asyncio
+    async def test_update_rejects_unknown_location_when_provider_is_configured(self, db_session):
+        service = WeatherService(
+            WeatherRepository(db_session), weather_client=ConfiguredFakeWeatherClient()
+        )
+        created = await service.create_record(make_payload())
+        with pytest.raises(LocationNotFoundError):
+            await service.update_record(
+                created.id, WeatherRecordUpdate(location_name="NotARealPlace")
+            )
+
+    @pytest.mark.asyncio
+    async def test_update_raises_not_found(self, weather_service):
         with pytest.raises(NotFoundError):
-            weather_service.update_record(9999, WeatherRecordUpdate(temperature=1.0))
+            await weather_service.update_record(9999, WeatherRecordUpdate(temperature=1.0))
 
 
 class TestDeleteRecord:
