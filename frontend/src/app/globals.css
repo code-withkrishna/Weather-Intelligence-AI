@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/*
+  Design system: "Calm Intelligence" (atmospheric)
+  ---------------------------------------------------
+  A quiet, instrument-panel aesthetic: the palette reads like sky at
+  different hours (dawn slate, day sky, dusk amber) rather than a generic
+  SaaS blue. Numbers (temperature, humidity, wind) are set in a monospaced
+  face so the dashboard reads like real telemetry, not marketing copy.
+*/
+
+:root {
+  --color-canvas: #f5f7fb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef2f8;
+  --color-border: #e1e7f0;
+  --color-ink: #101828;
+  --color-ink-soft: #57647d;
+  --color-ink-faint: #8896ac;
+
+  --color-sky: #2f6fed;
+  --color-sky-soft: #e5edfd;
+  --color-amber: #e08a1e;
+  --color-amber-soft: #fbf0dc;
+  --color-teal: #0f9488;
+  --color-teal-soft: #dff4f1;
+  --color-rose: #d6483a;
+  --color-rose-soft: #fbe6e3;
+
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -8px rgba(16, 24, 40, 0.08);
+}
+
+.dark {
+  --color-canvas: #0a1120;
+  --color-surface: #121a2c;
+  --color-surface-muted: #1a2338;
+  --color-border: #26314a;
+  --color-ink: #e9edf6;
+  --color-ink-soft: #a3aec4;
+  --color-ink-faint: #6b7791;
+
+  --color-sky: #6d97f5;
+  --color-sky-soft: #1b2c50;
+  --color-amber: #f0ab4e;
+  --color-amber-soft: #3a2a12;
+  --color-teal: #35c9ba;
+  --color-teal-soft: #0f3330;
+  --color-rose: #ec6b5c;
+  --color-rose-soft: #3a1917;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -10px rgba(0, 0, 0, 0.55);
+}
+
+@theme inline {
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-border: var(--color-border);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-ink-faint: var(--color-ink-faint);
+
+  --color-sky: var(--color-sky);
+  --color-sky-soft: var(--color-sky-soft);
+  --color-amber: var(--color-amber);
+  --color-amber-soft: var(--color-amber-soft);
+  --color-teal: var(--color-teal);
+  --color-teal-soft: var(--color-teal-soft);
+  --color-rose: var(--color-rose);
+  --color-rose-soft: var(--color-rose-soft);
+
+  --font-display: "Avenir Next", "Segoe UI Semibold", ui-sans-serif, system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: var(--color-sky-soft);
+  color: var(--color-sky);
+}
+
+/* Keyboard focus must stay visible everywhere (accessibility floor). */
+:focus-visible {
+  outline: 2px solid var(--color-sky);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
