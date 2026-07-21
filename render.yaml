@@ -1,0 +1,71 @@
+# Weather Intelligence Platform — Render Blueprint
+# FastAPI backend + Next.js frontend + PostgreSQL
+#
+# Deploy: push this file, then open:
+# https://dashboard.render.com/blueprint/new?repo=https://github.com/code-withkrishna/Weather-Intelligence-AI
+
+services:
+  - type: web
+    name: weather-api
+    runtime: python
+    plan: free
+    region: singapore
+    branch: main
+    rootDir: backend
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DATABASE_URL
+        fromDatabase:
+          name: weather-db
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: https://weather-frontend.onrender.com
+      - key: WEATHER_PROVIDER
+        value: openweathermap
+      - key: AI_PROVIDER
+        value: rule_based
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: WEATHERAPI_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+
+  - type: web
+    name: weather-frontend
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    rootDir: frontend
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: https://weather-api.onrender.com
+
+databases:
+  - name: weather-db
+    databaseName: weather_intelligence
+    user: weather_user
+    plan: free
+    postgresMajorVersion: "16"
+    ipAllowList: []
