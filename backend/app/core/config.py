@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     # --- Database ---
     DATABASE_URL: str = "sqlite:///./weather.db"
 
-    # --- CORS ---
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    # --- CORS (comma-separated origins) ---
+    CORS_ORIGINS: str = "http://localhost:3000"
 
     # --- External weather provider ---
     # Either OPENWEATHER_API_KEY or WEATHERAPI_KEY must be set for live data.
@@ -43,19 +43,23 @@ class Settings(BaseSettings):
     # --- Logging ---
     LOG_LEVEL: str = "INFO"
 
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def normalize_cors(cls, v):
+        if isinstance(v, list):
+            return ",".join(str(origin).strip() for origin in v if str(origin).strip())
+        return v
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=True,
     )
-
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def split_cors(cls, v):
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
 
 
 @lru_cache
