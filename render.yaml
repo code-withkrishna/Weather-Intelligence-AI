@@ -30,7 +30,7 @@ services:
           name: weather-db
           property: connectionString
       - key: CORS_ORIGINS
-        value: https://weather-frontend.onrender.com
+        value: https://weather-intelligence-ai-1.onrender.com
       - key: WEATHER_PROVIDER
         value: openweathermap
       - key: AI_PROVIDER
@@ -60,7 +60,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_BASE_URL
-        value: https://weather-api.onrender.com
+        value: https://weather-intelligence-ai.onrender.com
 
 databases:
   - name: weather-db
